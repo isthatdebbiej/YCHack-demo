@@ -1,0 +1,43 @@
+name: Capture issue intent
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  ensure-intent:
+    runs-on: [self-hosted, intent-anchor]
+    steps:
+      - name: Check out demo repository
+        uses: actions/checkout@v4
+        with:
+          path: demo
+
+      - name: Check out Intent Anchor
+        uses: actions/checkout@v4
+        with:
+          repository: isthatdebbiej/YCHack
+          ref: main
+          path: intent-anchor
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: intent-anchor/package-lock.json
+
+      - name: Build Intent Anchor
+        working-directory: intent-anchor
+        run: npm ci && npm run build
+
+      - name: Ensure issue intent exists in Claude-Mem
+        working-directory: demo
+        run: node ../intent-anchor/dist/src/cli.js issue ${{ github.event.issue.number }} --ensure --yes
+        env:
+          GH_TOKEN: ${{ github.token }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          CLAUDE_MEM_URL: ${{ secrets.CLAUDE_MEM_URL }}
