@@ -28,3 +28,6 @@ npm install
 npm test
 npm run typecheck
 ```
+
+For a fresh laptop, GitHub Actions runner, Claude-Mem, secrets, Greptile, and
+stage-day instructions, follow [SETUP.md](SETUP.md).

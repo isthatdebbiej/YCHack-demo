@@ -1,0 +1,46 @@
+name: Review with approved intent
+
+on:
+  pull_request:
+    types: [opened, synchronize, review_requested]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  review:
+    runs-on: [self-hosted, intent-anchor]
+    steps:
+      - name: Check out demo pull request
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.ref }}
+          path: demo
+
+      - name: Check out Intent Anchor
+        uses: actions/checkout@v4
+        with:
+          repository: isthatdebbiej/YCHack
+          ref: main
+          path: intent-anchor
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: intent-anchor/package-lock.json
+
+      - name: Build Intent Anchor
+        working-directory: intent-anchor
+        run: npm ci && npm run build
+
+      - name: Recall intent, start Greptile, and measure drift
+        working-directory: demo
+        run: node ../intent-anchor/dist/src/cli.js review --repo ${{ github.repository }} --pr ${{ github.event.pull_request.number }} --base origin/${{ github.event.repository.default_branch }} --yes
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GREPTILE_API_KEY: ${{ secrets.GREPTILE_API_KEY }}
+          CLAUDE_MEM_URL: ${{ secrets.CLAUDE_MEM_URL }}
+
