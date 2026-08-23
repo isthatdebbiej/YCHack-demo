@@ -8,6 +8,8 @@ const request: CheckoutRequest = {
   customerId: 'customer-7',
   amountCents: 4999,
   idempotencyKey: 'checkout-attempt-123',
+  paymentToken: 'payment-token-7',
+  lines: [{ sku: 'coffee-1kg', quantity: 1, unitPriceCents: 4999 }],
 };
 
 function dependencies() {
