@@ -6,6 +6,7 @@ export interface CheckoutRequest {
 
 export type CheckoutResult =
   | { status: 201; orderId: string }
+  | { status: 202; orderId: string }
   | { status: 429; retryAfterSeconds: number };
 
 export interface RateLimiter {
@@ -16,3 +17,6 @@ export interface OrderGateway {
   create(request: CheckoutRequest): Promise<void>;
 }
 
+export interface OrderQueue {
+  enqueue(request: CheckoutRequest): Promise<void>;
+}

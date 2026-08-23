@@ -9,20 +9,23 @@ const request: CheckoutRequest = {
 };
 
 describe('submitOrder', () => {
-  it('rejects overload explicitly and does not create an order', async () => {
+  it('accepts an overloaded order for deferred processing', async () => {
     const orders = { create: vi.fn() };
-    const result = await submitOrder(request, { isOverloaded: async () => true }, orders);
+    const queue = { enqueue: vi.fn() };
+    const result = await submitOrder(request, { isOverloaded: async () => true }, orders, queue);
 
-    expect(result).toEqual({ status: 429, retryAfterSeconds: 30 });
+    expect(result).toEqual({ status: 202, orderId: 'order-123' });
+    expect(queue.enqueue).toHaveBeenCalledWith(request);
     expect(orders.create).not.toHaveBeenCalled();
   });
 
   it('creates an order when capacity is available', async () => {
     const orders = { create: vi.fn() };
-    const result = await submitOrder(request, { isOverloaded: async () => false }, orders);
+    const queue = { enqueue: vi.fn() };
+    const result = await submitOrder(request, { isOverloaded: async () => false }, orders, queue);
 
     expect(result).toEqual({ status: 201, orderId: 'order-123' });
     expect(orders.create).toHaveBeenCalledWith(request);
+    expect(queue.enqueue).not.toHaveBeenCalled();
   });
 });
-
